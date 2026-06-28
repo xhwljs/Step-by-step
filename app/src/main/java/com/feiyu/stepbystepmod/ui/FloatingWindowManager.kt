@@ -100,15 +100,23 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
 
         // 获取模块自己的Context，用于加载布局和资源
         try {
-            moduleContext = appContext?.createPackageContext(
+            val rawModuleContext = appContext?.createPackageContext(
                 MODULE_PACKAGE,
                 Context.CONTEXT_IGNORE_SECURITY or Context.CONTEXT_INCLUDE_CODE
             )
+            // 给模块Context设置主题 - Material组件必须有正确的主题
+            val themeResId = rawModuleContext?.resources?.getIdentifier(
+                "Theme_StepByStepMod", "style", MODULE_PACKAGE
+            ) ?: 0
+            moduleContext = if (themeResId != 0 && rawModuleContext != null) {
+                android.view.ContextThemeWrapper(rawModuleContext, themeResId)
+            } else {
+                rawModuleContext
+            }
             layoutInflater = LayoutInflater.from(moduleContext)
-            XposedBridge.log("[StepByStepMod] 模块Context获取成功: $MODULE_PACKAGE")
+            XposedBridge.log("[StepByStepMod] 模块Context获取成功, themeResId=0x${themeResId.toString(16)}")
         } catch (e: Throwable) {
             XposedBridge.log("[StepByStepMod] 获取模块Context失败: ${e.message}")
-            // 失败降级：用目标应用的Context试试
             layoutInflater = LayoutInflater.from(appContext)
         }
 
@@ -439,26 +447,34 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
     }
 
     private fun showMainView() {
-        if (mainView == null) {
-            createMainView()
-        }
-
-        if (mainView?.parent == null) {
-            val params = WindowManager.LayoutParams(
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.MATCH_PARENT,
-                getWindowType(),
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                PixelFormat.TRANSLUCENT
-            ).apply {
-                gravity = Gravity.CENTER
+        try {
+            if (mainView == null) {
+                createMainView()
             }
-            windowManager?.addView(mainView, params)
+            if (mainView == null) {
+                XposedBridge.log("[StepByStepMod] showMainView: mainView为null，加载失败")
+                return
+            }
+
+            if (mainView?.parent == null) {
+                val params = WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    getWindowType(),
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                    PixelFormat.TRANSLUCENT
+                ).apply {
+                    gravity = Gravity.CENTER
+                }
+                windowManager?.addView(mainView, params)
+            }
+            mainView?.visibility = View.VISIBLE
+            isMainViewVisible = true
+            mainView?.alpha = 0f
+            mainView?.animate()?.alpha(1f)?.setDuration(200)?.start()
+        } catch (e: Throwable) {
+            XposedBridge.log("[StepByStepMod] showMainView 异常: ${e.message}")
         }
-        mainView?.visibility = View.VISIBLE
-        isMainViewVisible = true
-        mainView?.alpha = 0f
-        mainView?.animate()?.alpha(1f)?.setDuration(200)?.start()
     }
 
     private fun hideMainView() {
