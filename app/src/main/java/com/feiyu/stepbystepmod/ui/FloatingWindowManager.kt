@@ -123,6 +123,7 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
     }
 
     fun show() {
+        XposedBridge.log("[StepByStepMod] show: isInitialized=$isInitialized, isShowing=$isShowing")
         if (!isInitialized || isShowing) return
 
         handler.post {
@@ -132,12 +133,13 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
                 ThemeManager.addListener(this)
                 LogManager.addListener(this)
 
+                XposedBridge.log("[StepByStepMod] show: 调用createFloatView")
                 createFloatView()
                 isShowing = true
 
                 Toast.makeText(ctx, "⚡ StepByStep Mod 已激活", Toast.LENGTH_LONG).show()
             } catch (e: Throwable) {
-                XposedBridge.log("[StepByStepMod] 显示悬浮窗失败: ${e.message}")
+                XposedBridge.log("[StepByStepMod] show 异常: ${e.message}")
             }
         }
     }
@@ -164,16 +166,26 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
     }
 
     private fun createFloatView() {
-        val inflater = layoutInflater ?: return
+        XposedBridge.log("[StepByStepMod] createFloatView 开始")
+        val inflater = layoutInflater
+        if (inflater == null) {
+            XposedBridge.log("[StepByStepMod] createFloatView: inflater为null")
+            return
+        }
         val layoutId = getResId("layout_float_window", "layout")
         if (layoutId == 0) {
-            XposedBridge.log("[StepByStepMod] 找不到布局资源: layout_float_window")
+            XposedBridge.log("[StepByStepMod] createFloatView: 找不到布局 layout_float_window")
             return
         }
 
         floatView = inflater.inflate(layoutId, null)
+        XposedBridge.log("[StepByStepMod] createFloatView: floatView inflate完成=${floatView != null}")
+
         val iconId = getResId("float_icon", "id")
+        XposedBridge.log("[StepByStepMod] createFloatView: float_icon资源ID=0x${iconId.toString(16)}")
+
         floatIcon = floatView?.findViewById(iconId)
+        XposedBridge.log("[StepByStepMod] createFloatView: floatIcon=${floatIcon != null}, iconId=0x${iconId.toString(16)}")
 
         floatParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -188,8 +200,10 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
         }
 
         floatIcon?.setOnClickListener {
+            XposedBridge.log("[StepByStepMod] floatIcon onClick 触发")
             toggleMainView()
         }
+        XposedBridge.log("[StepByStepMod] createFloatView: clickListener已设置, floatIcon=${floatIcon != null}")
 
         floatIcon?.setOnTouchListener { _, event ->
             when (event.action) {
@@ -211,6 +225,7 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
         }
 
         windowManager?.addView(floatView, floatParams)
+        XposedBridge.log("[StepByStepMod] createFloatView: addView完成")
         applyFloatTheme()
     }
 
@@ -466,14 +481,18 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
     }
 
     private fun showMainView() {
+        XposedBridge.log("[StepByStepMod] showMainView: 开始, mainView=${mainView != null}, isMainViewVisible=$isMainViewVisible")
         try {
             if (mainView == null) {
+                XposedBridge.log("[StepByStepMod] showMainView: mainView为null，调用createMainView()")
                 createMainView()
             }
             if (mainView == null) {
-                XposedBridge.log("[StepByStepMod] showMainView: mainView为null，加载失败")
+                XposedBridge.log("[StepByStepMod] showMainView: mainView仍为null，createMainView失败")
                 return
             }
+
+            XposedBridge.log("[StepByStepMod] showMainView: mainView已有值，准备addView")
 
             if (mainView?.parent == null) {
                 val params = WindowManager.LayoutParams(
@@ -486,6 +505,7 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
                     gravity = Gravity.CENTER
                 }
                 windowManager?.addView(mainView, params)
+                XposedBridge.log("[StepByStepMod] showMainView: addView完成")
             }
             mainView?.visibility = View.VISIBLE
             isMainViewVisible = true
