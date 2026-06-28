@@ -106,7 +106,7 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
             )
             // 给模块Context设置主题 - Material组件必须有正确的主题
             val themeResId = rawModuleContext?.resources?.getIdentifier(
-                "Theme_StepByStepMod", "style", MODULE_PACKAGE
+                "Theme.StepByStepMod", "style", MODULE_PACKAGE
             ) ?: 0
             moduleContext = if (themeResId != 0 && rawModuleContext != null) {
                 android.view.ContextThemeWrapper(rawModuleContext, themeResId)
