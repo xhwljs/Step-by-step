@@ -25,6 +25,7 @@ class MemoryModifier private constructor() {
 
     private var pid: Int = -1
     private var isInitialized = false
+    private var context: android.content.Context? = null
 
     // 海岛模式
     @Volatile var islandBaseAddress: Long = 0
@@ -60,8 +61,9 @@ class MemoryModifier private constructor() {
     private var lockThread: Thread? = null
     private var lockLoopCount = 0L
 
-    fun init(pid: Int) {
+    fun init(pid: Int, ctx: android.content.Context) {
         this.pid = pid
+        this.context = ctx
         this.isInitialized = true
         LogManager.success("MemoryModifier 初始化完成, PID=$pid")
     }

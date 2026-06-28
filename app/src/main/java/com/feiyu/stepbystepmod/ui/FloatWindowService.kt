@@ -1,6 +1,10 @@
 package com.feiyu.stepbystepmod.ui
 
 import android.animation.ValueAnimator
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -18,13 +22,10 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
-import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.Toast
-import androidx.cardview.widget.CardView
-import androidx.core.content.ContextCompat
+import androidx.core.app.NotificationCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.feiyu.stepbystepmod.R
@@ -37,6 +38,11 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textview.MaterialTextView
 
 class FloatWindowService : Service(), LogManager.LogListener, ThemeManager.ThemeListener {
+
+    companion object {
+        private const val CHANNEL_ID = "stepbystepmod_channel"
+        private const val NOTIFICATION_ID = 1001
+    }
 
     private lateinit var windowManager: WindowManager
     private var floatView: View? = null
@@ -79,6 +85,9 @@ class FloatWindowService : Service(), LogManager.LogListener, ThemeManager.Theme
     override fun onCreate() {
         super.onCreate()
         try {
+            createNotificationChannel()
+            startForeground(NOTIFICATION_ID, createNotification())
+
             windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
             ThemeManager.init(this)
             ThemeManager.addListener(this)
@@ -88,6 +97,38 @@ class FloatWindowService : Service(), LogManager.LogListener, ThemeManager.Theme
         } catch (e: Exception) {
             LogManager.error("悬浮窗服务初始化失败: ${e.message}")
         }
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "模块运行中",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "StepByStep Mod 悬浮窗正在运行"
+                setShowBadge(false)
+            }
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun createNotification(): Notification {
+        val intent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("StepByStep Mod")
+            .setContentText("模块已激活，点击打开控制面板")
+            .setSmallIcon(R.drawable.ic_float_icon)
+            .setContentIntent(pendingIntent)
+            .setOngoing(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
     }
 
     override fun onDestroy() {
