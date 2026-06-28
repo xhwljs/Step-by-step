@@ -27,7 +27,6 @@ class MainHook : IXposedHookLoadPackage {
 
         classLoader = lpparam.classLoader
         isModuleActivated = true
-        XposedBridge.log("[$TAG] Target package loaded: ${lpparam.packageName}")
     }
 
     private fun hookAllApplications(lpparam: XC_LoadPackage.LoadPackageParam) {
@@ -41,17 +40,12 @@ class MainHook : IXposedHookLoadPackage {
                         val app = param.thisObject as android.app.Application
 
                         if (lpparam.packageName == TARGET_PACKAGE) {
-                            XposedBridge.log("[$TAG] Target app Application.onCreate called")
-
                             val pid = android.os.Process.myPid()
 
                             Thread {
                                 try {
                                     com.feiyu.stepbystepmod.hook.MemoryModifier.getInstance().init(pid, app)
-                                    XposedBridge.log("[$TAG] MemoryModifier 初始化完成")
-                                } catch (e: Throwable) {
-                                    XposedBridge.log("[$TAG] MemoryModifier 初始化失败: ${e.message}")
-                                }
+                                } catch (_: Throwable) {}
 
                                 try {
                                     Thread.sleep(3000)
@@ -59,14 +53,9 @@ class MainHook : IXposedHookLoadPackage {
                                         try {
                                             com.feiyu.stepbystepmod.ui.FloatingWindowManager.getInstance().init(app)
                                             com.feiyu.stepbystepmod.ui.FloatingWindowManager.getInstance().show()
-                                            XposedBridge.log("[$TAG] Floating window shown")
-                                        } catch (e: Throwable) {
-                                            XposedBridge.log("[$TAG] 显示悬浮窗失败: ${e.message}")
-                                        }
+                                        } catch (_: Throwable) {}
                                     }
-                                } catch (e: Throwable) {
-                                    XposedBridge.log("[$TAG] 悬浮窗线程出错: ${e.message}")
-                                }
+                                } catch (_: Throwable) {}
                             }.start()
 
                             Handler(Looper.getMainLooper()).postDelayed({
@@ -76,9 +65,7 @@ class MainHook : IXposedHookLoadPackage {
                                         "⚡ StepByStep Mod 已激活",
                                         Toast.LENGTH_SHORT
                                     ).show()
-                                } catch (e: Throwable) {
-                                    XposedBridge.log("[$TAG] Toast显示失败: ${e.message}")
-                                }
+                                } catch (_: Throwable) {}
                             }, 2000)
                         }
                     }

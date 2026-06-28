@@ -114,14 +114,12 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
                 rawModuleContext
             }
             layoutInflater = LayoutInflater.from(moduleContext)
-            XposedBridge.log("[StepByStepMod] 模块Context获取成功, themeResId=0x${themeResId.toString(16)}")
         } catch (e: Throwable) {
             XposedBridge.log("[StepByStepMod] 获取模块Context失败: ${e.message}")
             layoutInflater = LayoutInflater.from(appContext)
         }
 
         isInitialized = true
-        XposedBridge.log("[StepByStepMod] FloatingWindowManager.init 完成")
     }
 
     fun show() {
@@ -136,7 +134,6 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
 
                 createFloatView()
                 isShowing = true
-                XposedBridge.log("[StepByStepMod] 悬浮窗已显示")
 
                 Toast.makeText(ctx, "⚡ StepByStep Mod 已激活", Toast.LENGTH_LONG).show()
             } catch (e: Throwable) {
@@ -227,27 +224,20 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
     }
 
     private fun createMainView() {
-        XposedBridge.log("[StepByStepMod] createMainView 开始")
         val inflater = layoutInflater
-        XposedBridge.log("[StepByStepMod] createMainView: inflater=${inflater != null}")
-
         if (inflater == null) {
-            XposedBridge.log("[StepByStepMod] createMainView: inflater为null，直接返回")
+            XposedBridge.log("[StepByStepMod] createMainView: inflater为null")
             return
         }
 
         val layoutId = getResId("layout_main_panel", "layout")
-        XposedBridge.log("[StepByStepMod] createMainView: layoutId=0x${layoutId.toString(16)}")
-
         if (layoutId == 0) {
-            XposedBridge.log("[StepByStepMod] createMainView: 找不到布局资源 layout_main_panel")
+            XposedBridge.log("[StepByStepMod] createMainView: 找不到布局 layout_main_panel")
             return
         }
 
         try {
-            XposedBridge.log("[StepByStepMod] createMainView: 开始inflate布局")
             mainView = inflater.inflate(layoutId, null)
-            XposedBridge.log("[StepByStepMod] createMainView: inflate完成, mainView=${mainView != null}")
         } catch (e: Throwable) {
             XposedBridge.log("[StepByStepMod] createMainView inflate异常: ${e.message}")
             e.printStackTrace()
@@ -265,45 +255,32 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
             closeBtn = mainView?.findViewById(getResId("btn_close", "id"))
             minimizeBtn = mainView?.findViewById(getResId("btn_minimize", "id"))
             themeBtn = mainView?.findViewById(getResId("btn_theme", "id"))
-            XposedBridge.log("[StepByStepMod] createMainView: titleBar views获取完成")
 
             islandCard = mainView?.findViewById(getResId("card_island_mode", "id"))
             mainLevelCard = mainView?.findViewById(getResId("card_main_level", "id"))
             tribeBossCard = mainView?.findViewById(getResId("card_tribe_boss", "id"))
             logCard = mainView?.findViewById(getResId("card_logs", "id"))
-            XposedBridge.log("[StepByStepMod] createMainView: cards获取完成")
 
             switchIslandRefresh = mainView?.findViewById(getResId("switch_island_refresh", "id"))
             switchIslandSkill = mainView?.findViewById(getResId("switch_island_skill", "id"))
             switchMainLevelRefresh = mainView?.findViewById(getResId("switch_main_level_refresh", "id"))
             switchMainLevelSkill = mainView?.findViewById(getResId("switch_main_level_skill", "id"))
-            XposedBridge.log("[StepByStepMod] createMainView: switches获取完成")
 
             btnStartModify = mainView?.findViewById(getResId("btn_start_modify", "id"))
             btnCopyLogs = mainView?.findViewById(getResId("btn_copy_logs", "id"))
             btnClearLogs = mainView?.findViewById(getResId("btn_clear_logs", "id"))
-            XposedBridge.log("[StepByStepMod] createMainView: buttons获取完成")
 
             logRecyclerView = mainView?.findViewById(getResId("log_recycler_view", "id"))
             logAdapter = LogAdapter()
             val ctx = moduleContext ?: appContext
             logRecyclerView?.layoutManager = ctx?.let { LinearLayoutManager(it) }
             logRecyclerView?.adapter = logAdapter
-            XposedBridge.log("[StepByStepMod] createMainView: logRecyclerView设置完成")
 
             themeColorContainer = mainView?.findViewById(getResId("theme_color_container", "id"))
-            XposedBridge.log("[StepByStepMod] createMainView: themeColorContainer获取完成")
 
             setupListeners()
-            XposedBridge.log("[StepByStepMod] createMainView: setupListeners完成")
-
             setupThemeColors()
-            XposedBridge.log("[StepByStepMod] createMainView: setupThemeColors完成")
-
             applyTheme()
-            XposedBridge.log("[StepByStepMod] createMainView: applyTheme完成")
-
-            XposedBridge.log("[StepByStepMod] createMainView 全部完成")
         } catch (e: Throwable) {
             XposedBridge.log("[StepByStepMod] createMainView 内部异常: ${e.message}")
             e.printStackTrace()
@@ -480,6 +457,7 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
     }
 
     private fun toggleMainView() {
+        XposedBridge.log("[StepByStepMod] toggleMainView: isMainViewVisible=$isMainViewVisible")
         if (isMainViewVisible) {
             hideMainView()
         } else {
