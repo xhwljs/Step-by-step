@@ -29,7 +29,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textview.MaterialTextView
 import de.robv.android.xposed.XposedBridge
 
-class FloatingWindowManager private() : LogManager.LogListener, ThemeManager.ThemeListener {
+class FloatingWindowManager private constructor() : LogManager.LogListener, ThemeManager.ThemeListener {
 
     companion object {
         @Volatile

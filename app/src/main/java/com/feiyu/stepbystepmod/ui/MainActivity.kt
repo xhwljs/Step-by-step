@@ -95,17 +95,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun startFloatService() {
         try {
-            val intent = Intent(this, FloatWindowService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent)
-            } else {
-                startService(intent)
-            }
-            LogManager.info("悬浮窗服务已启动")
+            FloatingWindowManager.getInstance().init(this)
+            FloatingWindowManager.getInstance().show()
             Toast.makeText(this, R.string.msg_module_activated, Toast.LENGTH_SHORT).show()
             finish()
         } catch (e: Exception) {
-            LogManager.error("启动服务失败: ${e.message}")
             Toast.makeText(this, "启动失败: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
