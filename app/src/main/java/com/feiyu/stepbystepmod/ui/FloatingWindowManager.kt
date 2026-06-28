@@ -19,7 +19,6 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.feiyu.stepbystepmod.R
 import com.feiyu.stepbystepmod.hook.MemoryModifier
 import com.feiyu.stepbystepmod.util.LogManager
 import com.feiyu.stepbystepmod.util.ThemeManager
@@ -32,6 +31,8 @@ import de.robv.android.xposed.XposedBridge
 class FloatingWindowManager private constructor() : LogManager.LogListener, ThemeManager.ThemeListener {
 
     companion object {
+        const val MODULE_PACKAGE = "com.feiyu.stepbystepmod"
+
         @Volatile
         private var instance: FloatingWindowManager? = null
 
@@ -48,6 +49,8 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
     }
 
     private var appContext: Context? = null
+    private var moduleContext: Context? = null
+    private var layoutInflater: LayoutInflater? = null
     private var windowManager: WindowManager? = null
     private var isInitialized = false
     private var isShowing = false
@@ -94,19 +97,32 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
         if (isInitialized) return
         appContext = context.applicationContext
         windowManager = appContext?.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+
+        // 获取模块自己的Context，用于加载布局和资源
+        try {
+            moduleContext = appContext?.createPackageContext(
+                MODULE_PACKAGE,
+                Context.CONTEXT_IGNORE_SECURITY or Context.CONTEXT_INCLUDE_CODE
+            )
+            layoutInflater = LayoutInflater.from(moduleContext)
+            XposedBridge.log("[StepByStepMod] 模块Context获取成功: $MODULE_PACKAGE")
+        } catch (e: Throwable) {
+            XposedBridge.log("[StepByStepMod] 获取模块Context失败: ${e.message}")
+            // 失败降级：用目标应用的Context试试
+            layoutInflater = LayoutInflater.from(appContext)
+        }
+
         isInitialized = true
         XposedBridge.log("[StepByStepMod] FloatingWindowManager.init 完成")
     }
 
     fun show() {
-        if (!isInitialized || isShowing) {
-            XposedBridge.log("[StepByStepMod] FloatingWindowManager.show 跳过: initialized=$isInitialized, showing=$isShowing")
-            return
-        }
+        if (!isInitialized || isShowing) return
 
         handler.post {
             try {
-                ThemeManager.init(appContext!!)
+                val ctx = moduleContext ?: appContext ?: return@post
+                ThemeManager.init(ctx)
                 ThemeManager.addListener(this)
                 LogManager.addListener(this)
 
@@ -114,7 +130,7 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
                 isShowing = true
                 XposedBridge.log("[StepByStepMod] 悬浮窗已显示")
 
-                Toast.makeText(appContext, "StepByStep Mod 已激活", Toast.LENGTH_LONG).show()
+                Toast.makeText(ctx, "⚡ StepByStep Mod 已激活", Toast.LENGTH_LONG).show()
             } catch (e: Throwable) {
                 XposedBridge.log("[StepByStepMod] 显示悬浮窗失败: ${e.message}")
             }
@@ -137,10 +153,22 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
         }
     }
 
+    private fun getResId(name: String, type: String): Int {
+        val ctx = moduleContext ?: return 0
+        return ctx.resources.getIdentifier(name, type, MODULE_PACKAGE)
+    }
+
     private fun createFloatView() {
-        val ctx = appContext ?: return
-        floatView = LayoutInflater.from(ctx).inflate(R.layout.layout_float_window, null)
-        floatIcon = floatView?.findViewById(R.id.float_icon)
+        val inflater = layoutInflater ?: return
+        val layoutId = getResId("layout_float_window", "layout")
+        if (layoutId == 0) {
+            XposedBridge.log("[StepByStepMod] 找不到布局资源: layout_float_window")
+            return
+        }
+
+        floatView = inflater.inflate(layoutId, null)
+        val iconId = getResId("float_icon", "id")
+        floatIcon = floatView?.findViewById(iconId)
 
         floatParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -191,35 +219,42 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
     }
 
     private fun createMainView() {
-        val ctx = appContext ?: return
-        mainView = LayoutInflater.from(ctx).inflate(R.layout.layout_main_panel, null)
+        val inflater = layoutInflater ?: return
+        val layoutId = getResId("layout_main_panel", "layout")
+        if (layoutId == 0) {
+            XposedBridge.log("[StepByStepMod] 找不到布局资源: layout_main_panel")
+            return
+        }
 
-        mainContainer = mainView?.findViewById(R.id.main_container)
-        titleBar = mainView?.findViewById(R.id.title_bar)
-        closeBtn = mainView?.findViewById(R.id.btn_close)
-        minimizeBtn = mainView?.findViewById(R.id.btn_minimize)
-        themeBtn = mainView?.findViewById(R.id.btn_theme)
+        mainView = inflater.inflate(layoutId, null)
 
-        islandCard = mainView?.findViewById(R.id.card_island_mode)
-        mainLevelCard = mainView?.findViewById(R.id.card_main_level)
-        tribeBossCard = mainView?.findViewById(R.id.card_tribe_boss)
-        logCard = mainView?.findViewById(R.id.card_logs)
+        mainContainer = mainView?.findViewById(getResId("main_container", "id"))
+        titleBar = mainView?.findViewById(getResId("title_bar", "id"))
+        closeBtn = mainView?.findViewById(getResId("btn_close", "id"))
+        minimizeBtn = mainView?.findViewById(getResId("btn_minimize", "id"))
+        themeBtn = mainView?.findViewById(getResId("btn_theme", "id"))
 
-        switchIslandRefresh = mainView?.findViewById(R.id.switch_island_refresh)
-        switchIslandSkill = mainView?.findViewById(R.id.switch_island_skill)
-        switchMainLevelRefresh = mainView?.findViewById(R.id.switch_main_level_refresh)
-        switchMainLevelSkill = mainView?.findViewById(R.id.switch_main_level_skill)
+        islandCard = mainView?.findViewById(getResId("card_island_mode", "id"))
+        mainLevelCard = mainView?.findViewById(getResId("card_main_level", "id"))
+        tribeBossCard = mainView?.findViewById(getResId("card_tribe_boss", "id"))
+        logCard = mainView?.findViewById(getResId("card_logs", "id"))
 
-        btnStartModify = mainView?.findViewById(R.id.btn_start_modify)
-        btnCopyLogs = mainView?.findViewById(R.id.btn_copy_logs)
-        btnClearLogs = mainView?.findViewById(R.id.btn_clear_logs)
+        switchIslandRefresh = mainView?.findViewById(getResId("switch_island_refresh", "id"))
+        switchIslandSkill = mainView?.findViewById(getResId("switch_island_skill", "id"))
+        switchMainLevelRefresh = mainView?.findViewById(getResId("switch_main_level_refresh", "id"))
+        switchMainLevelSkill = mainView?.findViewById(getResId("switch_main_level_skill", "id"))
 
-        logRecyclerView = mainView?.findViewById(R.id.log_recycler_view)
+        btnStartModify = mainView?.findViewById(getResId("btn_start_modify", "id"))
+        btnCopyLogs = mainView?.findViewById(getResId("btn_copy_logs", "id"))
+        btnClearLogs = mainView?.findViewById(getResId("btn_clear_logs", "id"))
+
+        logRecyclerView = mainView?.findViewById(getResId("log_recycler_view", "id"))
         logAdapter = LogAdapter()
-        logRecyclerView?.layoutManager = LinearLayoutManager(ctx)
+        val ctx = moduleContext ?: appContext
+        logRecyclerView?.layoutManager = ctx?.let { LinearLayoutManager(it) }
         logRecyclerView?.adapter = logAdapter
 
-        themeColorContainer = mainView?.findViewById(R.id.theme_color_container)
+        themeColorContainer = mainView?.findViewById(getResId("theme_color_container", "id"))
 
         setupListeners()
         setupThemeColors()
@@ -227,9 +262,11 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
     }
 
     private fun setupThemeColors() {
-        val ctx = appContext ?: return
+        val ctx = moduleContext ?: appContext ?: return
         val colors = ThemeManager.ThemeColor.values()
         themeColorContainer?.removeAllViews()
+
+        val dotBgId = getResId("bg_theme_dot", "drawable")
 
         for (color in colors) {
             val dot = View(ctx)
@@ -238,7 +275,9 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
                 marginEnd = dpToPx(8)
             }
             dot.layoutParams = params
-            dot.setBackgroundResource(R.drawable.bg_theme_dot)
+            if (dotBgId != 0) {
+                dot.setBackgroundResource(dotBgId)
+            }
 
             try {
                 val drawable = dot.background
@@ -257,18 +296,18 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
     }
 
     private fun dpToPx(dp: Int): Int {
-        val ctx = appContext ?: return dp
+        val ctx = moduleContext ?: appContext ?: return dp
         return (dp * ctx.resources.displayMetrics.density).toInt()
     }
 
     private fun setupListeners() {
-        val ctx = appContext ?: return
+        val ctx = moduleContext ?: appContext ?: return
 
         closeBtn?.setOnClickListener { hideMainView() }
         minimizeBtn?.setOnClickListener { hideMainView() }
 
         themeBtn?.setOnClickListener {
-            val container = mainView?.findViewById<LinearLayout>(R.id.theme_color_container)
+            val container = themeColorContainer
             container?.visibility = if (container?.visibility == View.VISIBLE) View.GONE else View.VISIBLE
         }
 
@@ -312,7 +351,6 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
     }
 
     private fun applyTheme() {
-        val ctx = appContext ?: return
         val bgColor = ThemeManager.getBackgroundColor()
         val cardBg = ThemeManager.getCardBackgroundColor()
         val textColor = ThemeManager.getForegroundColor()
@@ -329,15 +367,25 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
             } catch (_: Exception) {}
         }
 
-        mainView?.findViewById<MaterialTextView>(R.id.tv_title)?.setTextColor(textColor)
-        mainView?.findViewById<MaterialTextView>(R.id.tv_island_title)?.setTextColor(textColor)
-        mainView?.findViewById<MaterialTextView>(R.id.tv_main_level_title)?.setTextColor(textColor)
-        mainView?.findViewById<MaterialTextView>(R.id.tv_tribe_boss_title)?.setTextColor(mutedColor)
-        mainView?.findViewById<MaterialTextView>(R.id.tv_logs_title)?.setTextColor(textColor)
-        mainView?.findViewById<MaterialTextView>(R.id.tv_island_refresh_label)?.setTextColor(textColor)
-        mainView?.findViewById<MaterialTextView>(R.id.tv_island_skill_label)?.setTextColor(textColor)
-        mainView?.findViewById<MaterialTextView>(R.id.tv_main_level_refresh_label)?.setTextColor(textColor)
-        mainView?.findViewById<MaterialTextView>(R.id.tv_main_level_skill_label)?.setTextColor(textColor)
+        val tvTitleId = getResId("tv_title", "id")
+        val tvIslandTitleId = getResId("tv_island_title", "id")
+        val tvMainLevelTitleId = getResId("tv_main_level_title", "id")
+        val tvTribeBossTitleId = getResId("tv_tribe_boss_title", "id")
+        val tvLogsTitleId = getResId("tv_logs_title", "id")
+        val tvIslandRefreshLabelId = getResId("tv_island_refresh_label", "id")
+        val tvIslandSkillLabelId = getResId("tv_island_skill_label", "id")
+        val tvMainLevelRefreshLabelId = getResId("tv_main_level_refresh_label", "id")
+        val tvMainLevelSkillLabelId = getResId("tv_main_level_skill_label", "id")
+
+        mainView?.findViewById<MaterialTextView>(tvTitleId)?.setTextColor(textColor)
+        mainView?.findViewById<MaterialTextView>(tvIslandTitleId)?.setTextColor(textColor)
+        mainView?.findViewById<MaterialTextView>(tvMainLevelTitleId)?.setTextColor(textColor)
+        mainView?.findViewById<MaterialTextView>(tvTribeBossTitleId)?.setTextColor(mutedColor)
+        mainView?.findViewById<MaterialTextView>(tvLogsTitleId)?.setTextColor(textColor)
+        mainView?.findViewById<MaterialTextView>(tvIslandRefreshLabelId)?.setTextColor(textColor)
+        mainView?.findViewById<MaterialTextView>(tvIslandSkillLabelId)?.setTextColor(textColor)
+        mainView?.findViewById<MaterialTextView>(tvMainLevelRefreshLabelId)?.setTextColor(textColor)
+        mainView?.findViewById<MaterialTextView>(tvMainLevelSkillLabelId)?.setTextColor(textColor)
 
         themeBtn?.setColorFilter(textColor)
         closeBtn?.setColorFilter(textColor)
@@ -359,9 +407,9 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
     }
 
     private fun startSignatureScan() {
-        val ctx = appContext ?: return
+        val ctx = moduleContext ?: appContext
         if (!MemoryModifier.getInstance().isReady()) {
-            Toast.makeText(ctx, "模块未初始化", Toast.LENGTH_SHORT).show()
+            if (ctx != null) Toast.makeText(ctx, "模块未初始化", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -391,8 +439,6 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
     }
 
     private fun showMainView() {
-        val ctx = appContext ?: return
-
         if (mainView == null) {
             createMainView()
         }
@@ -440,12 +486,17 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
 
     inner class LogAdapter : RecyclerView.Adapter<LogAdapter.LogViewHolder>() {
         inner class LogViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            val tvLog: MaterialTextView = itemView.findViewById(R.id.tv_log_item)
+            val tvLog: MaterialTextView? = itemView.findViewById(getResId("tv_log_item", "id"))
         }
 
         override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): LogViewHolder {
-            val view = LayoutInflater.from(appContext)
-                .inflate(R.layout.item_log, parent, false)
+            val inflater = layoutInflater
+            val itemLayoutId = getResId("item_log", "layout")
+            val view = if (inflater != null && itemLayoutId != 0) {
+                inflater.inflate(itemLayoutId, parent, false)
+            } else {
+                View(parent.context)
+            }
             return LogViewHolder(view)
         }
 
@@ -453,8 +504,8 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
             val logs = LogManager.getAllLogs()
             if (position >= logs.size) return
             val log = logs[position]
-            holder.tvLog.text = log.toFormattedString()
-            holder.tvLog.setTextColor(log.level.color.toInt())
+            holder.tvLog?.text = log.toFormattedString()
+            holder.tvLog?.setTextColor(log.level.color.toInt())
         }
 
         override fun getItemCount(): Int = LogManager.getLogCount()
