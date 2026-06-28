@@ -24,10 +24,10 @@
             </intent-filter>
         </activity>
 
-        <activity
+        <service
             android:name=".ui.FloatWindowService"
             android:exported="false"
-            android:theme="@style/Theme.StepByStepMod.Transparent" />
+            android:foregroundServiceType="specialUse" />
 
         <meta-data
             android:name="xposedmodule"
