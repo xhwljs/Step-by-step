@@ -18,9 +18,9 @@ import com.google.android.material.button.MaterialButton
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var btnGrantPermission: MaterialButton
-    private lateinit var btnOpenSettings: MaterialButton
-    private lateinit var btnStartService: MaterialButton
+    private var btnGrantPermission: MaterialButton? = null
+    private var btnOpenSettings: MaterialButton? = null
+    private var btnStartService: MaterialButton? = null
 
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -28,28 +28,39 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        try {
+            setContentView(R.layout.activity_main)
+            initViews()
+            setupListeners()
+            checkOverlayPermission()
+            LogManager.info("主界面已启动")
+        } catch (e: Exception) {
+            LogManager.error("主界面初始化失败: ${e.message}")
+            Toast.makeText(this, "初始化失败: ${e.message}", Toast.LENGTH_LONG).show()
+            finish()
+        }
+    }
 
+    private fun initViews() {
         btnGrantPermission = findViewById(R.id.btn_grant_permission)
         btnOpenSettings = findViewById(R.id.btn_open_settings)
         btnStartService = findViewById(R.id.btn_start_service)
 
-        setupListeners()
-        checkOverlayPermission()
-
-        LogManager.info("主界面已启动")
+        if (btnGrantPermission == null || btnOpenSettings == null || btnStartService == null) {
+            throw RuntimeException("布局视图初始化失败，请检查布局文件")
+        }
     }
 
     private fun setupListeners() {
-        btnGrantPermission.setOnClickListener {
+        btnGrantPermission?.setOnClickListener {
             requestOverlayPermission()
         }
 
-        btnOpenSettings.setOnClickListener {
+        btnOpenSettings?.setOnClickListener {
             openAppSettings()
         }
 
-        btnStartService.setOnClickListener {
+        btnStartService?.setOnClickListener {
             startFloatService()
         }
     }
@@ -65,8 +76,8 @@ class MainActivity : AppCompatActivity() {
     private fun checkOverlayPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val hasPermission = Settings.canDrawOverlays(this)
-            btnGrantPermission.isEnabled = !hasPermission
-            btnStartService.isEnabled = hasPermission
+            btnGrantPermission?.isEnabled = !hasPermission
+            btnStartService?.isEnabled = hasPermission
 
             if (hasPermission) {
                 LogManager.success("悬浮窗权限已授权")

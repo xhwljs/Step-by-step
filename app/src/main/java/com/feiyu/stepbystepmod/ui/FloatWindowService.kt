@@ -78,12 +78,16 @@ class FloatWindowService : Service(), LogManager.LogListener, ThemeManager.Theme
 
     override fun onCreate() {
         super.onCreate()
-        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-        ThemeManager.init(this)
-        ThemeManager.addListener(this)
-        LogManager.addListener(this)
-        createFloatView()
-        createMainView()
+        try {
+            windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+            ThemeManager.init(this)
+            ThemeManager.addListener(this)
+            LogManager.addListener(this)
+            createFloatView()
+            createMainView()
+        } catch (e: Exception) {
+            LogManager.error("悬浮窗服务初始化失败: ${e.message}")
+        }
     }
 
     override fun onDestroy() {
@@ -157,38 +161,42 @@ class FloatWindowService : Service(), LogManager.LogListener, ThemeManager.Theme
     }
 
     private fun createMainView() {
-        mainView = LayoutInflater.from(this).inflate(R.layout.layout_main_panel, null)
+        try {
+            mainView = LayoutInflater.from(this).inflate(R.layout.layout_main_panel, null)
 
-        mainContainer = mainView?.findViewById(R.id.main_container)
-        titleBar = mainView?.findViewById(R.id.title_bar)
-        closeBtn = mainView?.findViewById(R.id.btn_close)
-        minimizeBtn = mainView?.findViewById(R.id.btn_minimize)
-        themeBtn = mainView?.findViewById(R.id.btn_theme)
+            mainContainer = mainView?.findViewById(R.id.main_container)
+            titleBar = mainView?.findViewById(R.id.title_bar)
+            closeBtn = mainView?.findViewById(R.id.btn_close)
+            minimizeBtn = mainView?.findViewById(R.id.btn_minimize)
+            themeBtn = mainView?.findViewById(R.id.btn_theme)
 
-        islandCard = mainView?.findViewById(R.id.card_island_mode)
-        mainLevelCard = mainView?.findViewById(R.id.card_main_level)
-        tribeBossCard = mainView?.findViewById(R.id.card_tribe_boss)
-        logCard = mainView?.findViewById(R.id.card_logs)
+            islandCard = mainView?.findViewById(R.id.card_island_mode)
+            mainLevelCard = mainView?.findViewById(R.id.card_main_level)
+            tribeBossCard = mainView?.findViewById(R.id.card_tribe_boss)
+            logCard = mainView?.findViewById(R.id.card_logs)
 
-        switchIslandRefresh = mainView?.findViewById(R.id.switch_island_refresh)
-        switchIslandSkill = mainView?.findViewById(R.id.switch_island_skill)
-        switchMainLevelRefresh = mainView?.findViewById(R.id.switch_main_level_refresh)
-        switchMainLevelSkill = mainView?.findViewById(R.id.switch_main_level_skill)
+            switchIslandRefresh = mainView?.findViewById(R.id.switch_island_refresh)
+            switchIslandSkill = mainView?.findViewById(R.id.switch_island_skill)
+            switchMainLevelRefresh = mainView?.findViewById(R.id.switch_main_level_refresh)
+            switchMainLevelSkill = mainView?.findViewById(R.id.switch_main_level_skill)
 
-        btnStartModify = mainView?.findViewById(R.id.btn_start_modify)
-        btnCopyLogs = mainView?.findViewById(R.id.btn_copy_logs)
-        btnClearLogs = mainView?.findViewById(R.id.btn_clear_logs)
+            btnStartModify = mainView?.findViewById(R.id.btn_start_modify)
+            btnCopyLogs = mainView?.findViewById(R.id.btn_copy_logs)
+            btnClearLogs = mainView?.findViewById(R.id.btn_clear_logs)
 
-        logRecyclerView = mainView?.findViewById(R.id.log_recycler_view)
-        logAdapter = LogAdapter()
-        logRecyclerView?.layoutManager = LinearLayoutManager(this)
-        logRecyclerView?.adapter = logAdapter
+            logRecyclerView = mainView?.findViewById(R.id.log_recycler_view)
+            logAdapter = LogAdapter()
+            logRecyclerView?.layoutManager = LinearLayoutManager(this)
+            logRecyclerView?.adapter = logAdapter
 
-        themeColorContainer = mainView?.findViewById(R.id.theme_color_container)
+            themeColorContainer = mainView?.findViewById(R.id.theme_color_container)
 
-        setupListeners()
-        setupThemeColors()
-        applyTheme()
+            setupListeners()
+            setupThemeColors()
+            applyTheme()
+        } catch (e: Exception) {
+            LogManager.error("主面板初始化失败: ${e.message}")
+        }
     }
 
     private fun setupThemeColors() {
@@ -204,8 +212,12 @@ class FloatWindowService : Service(), LogManager.LogListener, ThemeManager.Theme
             dot.layoutParams = params
             dot.setBackgroundResource(R.drawable.bg_theme_dot)
 
-            val drawable = dot.background as? GradientDrawable
-            drawable?.setColor(color.getPrimaryInt())
+            try {
+                val drawable = dot.background
+                if (drawable is GradientDrawable) {
+                    drawable.setColor(color.getPrimaryInt())
+                }
+            } catch (_: Exception) {}
 
             dot.setOnClickListener {
                 ThemeManager.setTheme(color)
@@ -234,22 +246,22 @@ class FloatWindowService : Service(), LogManager.LogListener, ThemeManager.Theme
         }
 
         switchIslandRefresh?.setOnCheckedChangeListener { _, isChecked ->
-            if (!switchIslandRefresh?.isPressed!!) return@setOnCheckedChangeListener
+            if (switchIslandRefresh?.isPressed != true) return@setOnCheckedChangeListener
             MemoryModifier.getInstance().setIslandInfiniteRefresh(isChecked)
         }
 
         switchIslandSkill?.setOnCheckedChangeListener { _, isChecked ->
-            if (!switchIslandSkill?.isPressed!!) return@setOnCheckedChangeListener
+            if (switchIslandSkill?.isPressed != true) return@setOnCheckedChangeListener
             MemoryModifier.getInstance().setIslandLevelLock(isChecked)
         }
 
         switchMainLevelRefresh?.setOnCheckedChangeListener { _, isChecked ->
-            if (!switchMainLevelRefresh?.isPressed!!) return@setOnCheckedChangeListener
+            if (switchMainLevelRefresh?.isPressed != true) return@setOnCheckedChangeListener
             MemoryModifier.getInstance().setMainLevelInfiniteRefresh(isChecked)
         }
 
         switchMainLevelSkill?.setOnCheckedChangeListener { _, isChecked ->
-            if (!switchMainLevelSkill?.isPressed!!) return@setOnCheckedChangeListener
+            if (switchMainLevelSkill?.isPressed != true) return@setOnCheckedChangeListener
             MemoryModifier.getInstance().setMainLevelInfiniteSkill(isChecked)
         }
 
@@ -273,7 +285,6 @@ class FloatWindowService : Service(), LogManager.LogListener, ThemeManager.Theme
         val cardBg = ThemeManager.getCardBackgroundColor()
         val textColor = ThemeManager.getForegroundColor()
         val mutedColor = ThemeManager.getMutedColor()
-        val borderColor = ThemeManager.getBorderColor()
         val primaryColor = ThemeManager.getPrimaryColor()
 
         mainContainer?.setBackgroundColor(bgColor)
@@ -281,7 +292,9 @@ class FloatWindowService : Service(), LogManager.LogListener, ThemeManager.Theme
 
         listOf(islandCard, mainLevelCard, tribeBossCard, logCard).forEach { card ->
             card?.setCardBackgroundColor(cardBg)
-            card?.strokeColor = borderColor
+            try {
+                card?.strokeColor = android.content.res.ColorStateList.valueOf(ThemeManager.getBorderColor())
+            } catch (_: Exception) {}
         }
 
         mainView?.findViewById<MaterialTextView>(R.id.tv_title)?.setTextColor(textColor)
@@ -305,8 +318,12 @@ class FloatWindowService : Service(), LogManager.LogListener, ThemeManager.Theme
     private fun applyFloatTheme() {
         val primaryColor = ThemeManager.getPrimaryColor()
         val icon = floatIcon ?: return
-        val bg = icon.background as? GradientDrawable
-        bg?.setColor(primaryColor)
+        try {
+            val bg = icon.background
+            if (bg is GradientDrawable) {
+                bg.setColor(primaryColor)
+            }
+        } catch (_: Exception) {}
     }
 
     private fun startSignatureScan() {
