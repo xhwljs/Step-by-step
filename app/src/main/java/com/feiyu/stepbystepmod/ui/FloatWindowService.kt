@@ -293,7 +293,7 @@ class FloatWindowService : Service(), LogManager.LogListener, ThemeManager.Theme
         listOf(islandCard, mainLevelCard, tribeBossCard, logCard).forEach { card ->
             card?.setCardBackgroundColor(cardBg)
             try {
-                card?.strokeColor = android.content.res.ColorStateList.valueOf(ThemeManager.getBorderColor())
+                card?.strokeColor = ThemeManager.getBorderColor()
             } catch (_: Exception) {}
         }
 
