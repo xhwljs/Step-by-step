@@ -28,7 +28,7 @@
                 android:gravity="center_vertical"
                 android:paddingBottom="16dp">
 
-                <MaterialTextView
+                <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/tv_title"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -79,7 +79,7 @@
                 android:visibility="gone"
                 android:layout_marginBottom="12dp">
 
-                <MaterialTextView
+                <com.google.android.material.textview.MaterialTextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="主题色："
@@ -118,7 +118,7 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <MaterialTextView
+                    <com.google.android.material.textview.MaterialTextView
                         android:id="@+id/tv_island_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -137,7 +137,7 @@
                         android:gravity="center_vertical"
                         android:layout_marginBottom="8dp">
 
-                        <MaterialTextView
+                        <com.google.android.material.textview.MaterialTextView
                             android:id="@+id/tv_island_refresh_label"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -159,7 +159,7 @@
                         android:orientation="horizontal"
                         android:gravity="center_vertical">
 
-                        <MaterialTextView
+                        <com.google.android.material.textview.MaterialTextView
                             android:id="@+id/tv_island_skill_label"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -197,7 +197,7 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <MaterialTextView
+                    <com.google.android.material.textview.MaterialTextView
                         android:id="@+id/tv_main_level_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -216,7 +216,7 @@
                         android:gravity="center_vertical"
                         android:layout_marginBottom="8dp">
 
-                        <MaterialTextView
+                        <com.google.android.material.textview.MaterialTextView
                             android:id="@+id/tv_main_level_refresh_label"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -238,7 +238,7 @@
                         android:orientation="horizontal"
                         android:gravity="center_vertical">
 
-                        <MaterialTextView
+                        <com.google.android.material.textview.MaterialTextView
                             android:id="@+id/tv_main_level_skill_label"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -276,7 +276,7 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <MaterialTextView
+                    <com.google.android.material.textview.MaterialTextView
                         android:id="@+id/tv_tribe_boss_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -288,7 +288,7 @@
                         android:drawablePadding="8dp"
                         android:layout_marginBottom="12dp" />
 
-                    <MaterialTextView
+                    <com.google.android.material.textview.MaterialTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="功能开发中..."
@@ -323,7 +323,7 @@
                         android:gravity="center_vertical"
                         android:layout_marginBottom="12dp">
 
-                        <MaterialTextView
+                        <com.google.android.material.textview.MaterialTextView
                             android:id="@+id/tv_logs_title"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
