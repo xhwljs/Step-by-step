@@ -48,7 +48,7 @@ object MainHook : IXposedHookLoadPackage {
                 val handler = XposedHelpers.getObjectField(currentActivityThread, "mH") as android.os.Handler
                 handler.post {
                     try {
-                        val ctx = XposedHelpers.callMethod(currentActivityThread, "getSystemContext") as android.app.ContextImpl
+                        val ctx = XposedHelpers.callMethod(currentActivityThread, "getSystemContext") as android.content.Context
                         Toast.makeText(ctx, "StepByStep Mod 已激活，点击悬浮球打开控制面板", Toast.LENGTH_LONG).show()
                     } catch (_: Exception) {}
                 }
