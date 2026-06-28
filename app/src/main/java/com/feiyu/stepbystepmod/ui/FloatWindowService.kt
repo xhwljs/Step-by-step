@@ -85,17 +85,44 @@ class FloatWindowService : Service(), LogManager.LogListener, ThemeManager.Theme
     override fun onCreate() {
         super.onCreate()
         try {
+            windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+
+            // 检查悬浮窗权限
+            if (!hasOverlayPermission()) {
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                    Toast.makeText(
+                        this,
+                        "请先授予悬浮窗权限！",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                stopSelf()
+                return
+            }
+
             createNotificationChannel()
             startForeground(NOTIFICATION_ID, createNotification())
 
-            windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
             ThemeManager.init(this)
             ThemeManager.addListener(this)
             LogManager.addListener(this)
             createFloatView()
             createMainView()
+
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                Toast.makeText(this, "悬浮窗已启动", Toast.LENGTH_SHORT).show()
+            }
         } catch (e: Exception) {
-            LogManager.error("悬浮窗服务初始化失败: ${e.message}")
+            android.util.Log.e("FloatWindowService", "onCreate error", e)
+            stopSelf()
+        }
+    }
+
+    private fun hasOverlayPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            android.provider.Settings.canDrawOverlays(this)
+        } else {
+            true
         }
     }
 
