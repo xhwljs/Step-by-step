@@ -89,6 +89,8 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
     private var initialY = 0
     private var initialTouchX = 0f
     private var initialTouchY = 0f
+    private var isDragging = false
+    private val touchSlop = 10f // 判定为拖动的最小移动距离
 
     private val handler = Handler(Looper.getMainLooper())
     private var floatParams: WindowManager.LayoutParams? = null
@@ -208,6 +210,7 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
         floatIcon?.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
+                    isDragging = false
                     initialX = floatParams!!.x
                     initialY = floatParams!!.y
                     initialTouchX = event.rawX
@@ -215,9 +218,24 @@ class FloatingWindowManager private constructor() : LogManager.LogListener, Them
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    floatParams!!.x = initialX + (event.rawX - initialTouchX).toInt()
-                    floatParams!!.y = initialY + (event.rawY - initialTouchY).toInt()
-                    windowManager?.updateViewLayout(floatView, floatParams)
+                    val dx = event.rawX - initialTouchX
+                    val dy = event.rawY - initialTouchY
+                    if (Math.abs(dx) > touchSlop || Math.abs(dy) > touchSlop) {
+                        isDragging = true
+                    }
+                    if (isDragging) {
+                        floatParams!!.x = initialX + dx.toInt()
+                        floatParams!!.y = initialY + dy.toInt()
+                        windowManager?.updateViewLayout(floatView, floatParams)
+                    }
+                    true
+                }
+                MotionEvent.ACTION_UP -> {
+                    if (!isDragging) {
+                        // 没有拖动，触发点击事件
+                        floatIcon?.performClick()
+                    }
+                    isDragging = false
                     true
                 }
                 else -> false
