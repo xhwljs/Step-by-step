@@ -1,0 +1,101 @@
+package com.feiyu.stepbystepmod.ui
+
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.provider.Settings
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.feiyu.stepbystepmod.R
+import com.feiyu.stepbystepmod.util.LogManager
+import com.google.android.material.button.MaterialButton
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var btnGrantPermission: MaterialButton
+    private lateinit var btnOpenSettings: MaterialButton
+    private lateinit var btnStartService: MaterialButton
+
+    private val overlayPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { checkOverlayPermission() }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        btnGrantPermission = findViewById(R.id.btn_grant_permission)
+        btnOpenSettings = findViewById(R.id.btn_open_settings)
+        btnStartService = findViewById(R.id.btn_start_service)
+
+        setupListeners()
+        checkOverlayPermission()
+
+        LogManager.info("主界面已启动")
+    }
+
+    private fun setupListeners() {
+        btnGrantPermission.setOnClickListener {
+            requestOverlayPermission()
+        }
+
+        btnOpenSettings.setOnClickListener {
+            openAppSettings()
+        }
+
+        btnStartService.setOnClickListener {
+            startFloatService()
+        }
+    }
+
+    private fun requestOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+            intent.data = Uri.parse("package:$packageName")
+            overlayPermissionLauncher.launch(intent)
+        }
+    }
+
+    private fun checkOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val hasPermission = Settings.canDrawOverlays(this)
+            btnGrantPermission.isEnabled = !hasPermission
+            btnStartService.isEnabled = hasPermission
+
+            if (hasPermission) {
+                LogManager.success("悬浮窗权限已授权")
+            } else {
+                LogManager.warning("悬浮窗权限未授权")
+            }
+        }
+    }
+
+    private fun openAppSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        intent.data = Uri.parse("package:$packageName")
+        startActivity(intent)
+    }
+
+    private fun startFloatService() {
+        try {
+            val intent = Intent(this, FloatWindowService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+            LogManager.info("悬浮窗服务已启动")
+            Toast.makeText(this, R.string.msg_module_activated, Toast.LENGTH_SHORT).show()
+            finish()
+        } catch (e: Exception) {
+            LogManager.error("启动服务失败: ${e.message}")
+            Toast.makeText(this, "启动失败: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+}

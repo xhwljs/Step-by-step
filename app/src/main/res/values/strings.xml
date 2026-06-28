@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">StepByStep Mod</string>
+
+    <!-- Main UI -->
+    <string name="title_island_mode">海岛模式</string>
+    <string name="title_main_mode">主线关卡</string>
+    <string name="title_tribe_boss_mode">部落Boss</string>
+    <string name="title_logs">日志</string>
+    <string name="title_settings">设置</string>
+
+    <!-- Features -->
+    <string name="feature_infinite_refresh">无限刷新</string>
+    <string name="feature_infinite_skill">无限选择技能</string>
+    <string name="feature_lock_level">锁定等级</string>
+
+    <!-- Actions -->
+    <string name="action_start_modify">开始修改</string>
+    <string name="action_stop_modify">停止修改</string>
+    <string name="action_clear_logs">清空日志</string>
+    <string name="action_copy_logs">复制日志</string>
+    <string name="action_switch_theme">切换主题</string>
+
+    <!-- Status -->
+    <string name="status_scanning">正在扫描特征码...</string>
+    <string name="status_found">已找到基址</string>
+    <string name="status_not_found">未找到基址</string>
+    <string name="status_modifying">正在修改...</string>
+    <string name="status_success">修改成功</string>
+    <string name="status_failed">修改失败</string>
+    <string name="status_ready">就绪</string>
+    <string name="status_active">已激活</string>
+    <string name="status_inactive">未激活</string>
+
+    <!-- Logs -->
+    <string name="log_scan_start">开始扫描特征码...</string>
+    <string name="log_scan_progress">扫描进度: %d%%</string>
+    <string name="log_address_found">找到地址: 0x%X</string>
+    <string name="log_offset_applied">应用偏移: 0x%X</string>
+    <string name="log_value_modified">修改值: %d</string>
+    <string name="log_feature_enabled">功能已开启: %s</string>
+    <string name="log_feature_disabled">功能已关闭: %s</string>
+
+    <!-- Messages -->
+    <string name="msg_logs_copied">日志已复制到剪贴板</string>
+    <string name="msg_logs_cleared">日志已清空</string>
+    <string name="msg_module_activated">模块已激活</string>
+    <string name="msg_float_window_hint">点击打开控制面板</string>
+</resources>

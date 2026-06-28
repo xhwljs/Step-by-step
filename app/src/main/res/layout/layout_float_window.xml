@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/float_icon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_float_icon"
+        android:background="@drawable/bg_float_icon"
+        android:padding="8dp"
+        android:contentDescription="@string/msg_float_window_hint" />
+
+</FrameLayout>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Theme Colors - Dark Mode OLED -->
+    <color name="color_primary">#7C3AED</color>
+    <color name="color_on_primary">#FFFFFF</color>
+    <color name="color_secondary">#A78BFA</color>
+    <color name="color_accent">#F43F5E</color>
+    <color name="color_background">#0F0F23</color>
+    <color name="color_foreground">#E2E8F0</color>
+    <color name="color_muted">#27273B</color>
+    <color name="color_border">#4C1D95</color>
+    <color name="color_destructive">#EF4444</color>
+    <color name="color_ring">#7C3AED</color>
+    <color name="color_success">#22C55E</color>
+    <color name="color_warning">#F59E0B</color>
+
+    <!-- Light Theme Colors -->
+    <color name="color_primary_light">#7C3AED</color>
+    <color name="color_on_primary_light">#FFFFFF</color>
+    <color name="color_secondary_light">#A78BFA</color>
+    <color name="color_accent_light">#F43F5E</color>
+    <color name="color_background_light">#F8FAFC</color>
+    <color name="color_foreground_light">#1E293B</color>
+    <color name="color_muted_light">#E2E8F0</color>
+    <color name="color_border_light">#C4B5FD</color>
+    <color name="color_destructive_light">#EF4444</color>
+    <color name="color_ring_light">#7C3AED</color>
+
+    <!-- Card Colors -->
+    <color name="card_background_dark">#1A1A2E</color>
+    <color name="card_background_light">#FFFFFF</color>
+
+    <!-- Transparent -->
+    <color name="transparent">#00000000</color>
+    <color name="scrim">#80000000</color>
+</resources>
